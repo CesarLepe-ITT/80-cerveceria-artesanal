@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Panel de control de producción para una cervecería artesanal.">
+    <title>Cervecería Artesanal · Panel de producción</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="topbar">
+        <div class="marca">
+            <span class="marca-icono" aria-hidden="true">CA</span>
+            <span class="marca-texto">
+                <strong>Cervecería Artesanal</strong>
+                <small>Planta Tijuana · OTP</small>
+            </span>
+        </div>
+        <nav class="navegacion" aria-label="Secciones">
+            <a href="#resumen">Resumen</a>
+            <a href="#lotes">Lotes</a>
+            <a href="#fermentadores">Fermentadores</a>
+            <a href="#actividad">Actividad</a>
+        </nav>
+        <div class="conexion">
+            <span id="indicador-conexion" class="punto"></span>
+            <span id="estado-conexion">Conectando</span>
+            <span id="uptime" class="dato-sistema"></span>
+            <span id="version" class="dato-sistema"></span>
+        </div>
+    </header>
+
+    <main id="contenido">
+        <section class="hero">
+            <div>
+                <p class="eyebrow">Producción en vivo</p>
+                <h1>Control de lotes y fermentación</h1>
+                <p class="lead">
+                    Sigue cada lote por sus etapas, administra los fermentadores y reacciona
+                    a las desviaciones de temperatura en tiempo real.
+                </p>
+            </div>
+            <div class="hero-acciones">
+                <button id="btn-actualizar" type="button" class="boton">Actualizar</button>
+                <a class="boton fantasma" href="/metrics" target="_blank" rel="noopener">
+                    Métricas Prometheus
+                </a>
+            </div>
+        </section>
+
+        <section id="resumen" class="seccion">
+            <div class="seccion-cabecera">
+                <div>
+                    <h2>Resumen de la planta</h2>
+                    <p>Indicadores calculados en vivo a partir del estado de los procesos.</p>
+                </div>
+            </div>
+            <div id="metricas" class="metricas" aria-live="polite"></div>
+
+            <div class="panel pipeline-panel">
+                <div class="panel-cabecera">
+                    <h3>Etapas de producción</h3>
+                    <span class="nota">Distribución actual de lotes</span>
+                </div>
+                <div id="pipeline" class="pipeline"></div>
+            </div>
+        </section>
+
+        <section id="lotes" class="seccion">
+            <div class="seccion-cabecera">
+                <div>
+                    <h2>Lotes</h2>
+                    <p>Crea lotes y avanza la etapa cuando el trabajo esté confirmado.</p>
+                </div>
+                <div class="acciones-cabecera">
+                    <label class="filtro">
+                        <span>Etapa</span>
+                        <select id="filtro-etapa">
+                            <option value="">Todas</option>
+                            <option value="molienda">Molienda</option>
+                            <option value="coccion">Cocción</option>
+                            <option value="fermentacion">Fermentación</option>
+                            <option value="maduracion">Maduración</option>
+                            <option value="envasado">Envasado</option>
+                            <option value="terminado">Terminado</option>
+                        </select>
+                    </label>
+                    <button type="button" class="boton primario" data-abrir="modal-lote">
+                        Nuevo lote
+                    </button>
+                </div>
+            </div>
+            <div id="lista-lotes" class="rejilla lotes" aria-live="polite"></div>
+        </section>
+
+        <section id="fermentadores" class="seccion">
+            <div class="seccion-cabecera">
+                <div>
+                    <h2>Fermentadores</h2>
+                    <p>
+                        Un fermentador aloja un solo lote. La temperatura se compara contra
+                        el objetivo y su tolerancia.
+                    </p>
+                </div>
+                <div class="acciones-cabecera">
+                    <button type="button" class="boton primario" data-abrir="modal-fermentador">
+                        Nuevo fermentador
+                    </button>
+                </div>
+            </div>
+            <div id="lista-fermentadores" class="rejilla fermentadores" aria-live="polite"></div>
+        </section>
+
+        <section id="actividad" class="seccion">
+            <div class="seccion-cabecera">
+                <div>
+                    <h2>Actividad y alertas</h2>
+                    <p>Bitácora en memoria. Los eventos nuevos llegan por SSE sin recargar.</p>
+                </div>
+                <span id="contador-eventos" class="nota"></span>
+            </div>
+            <div class="panel">
+                <ol id="lista-eventos" class="eventos" aria-live="polite"></ol>
+            </div>
+        </section>
+    </main>
+
+    <footer class="pie">
+        <span>Cervecería Artesanal · proyecto Erlang/OTP</span>
+        <span>Estado en memoria con snapshots; reiniciar el nodo limpia el registro.</span>
+    </footer>
+
+    <dialog id="modal-lote" class="modal">
+        <form id="form-lote" class="modal-tarjeta">
+            <header class="modal-cabecera">
+                <div>
+                    <p class="eyebrow">Nuevo lote</p>
+                    <h2>Registrar lote de producción</h2>
+                </div>
+                <button type="button" class="cerrar" data-cerrar aria-label="Cerrar">×</button>
+            </header>
+            <div class="campos">
+                <label>
+                    <span>Nombre del lote</span>
+                    <input name="nombre" type="text" required maxlength="80"
+                           placeholder="IPA Tijuana #13" autocomplete="off">
+                </label>
+                <label>
+                    <span>Receta</span>
+                    <input name="receta" type="text" maxlength="80"
+                           placeholder="IPA Tijuana" autocomplete="off">
+                </label>
+                <label>
+                    <span>Litros</span>
+                    <input name="litros" type="number" required min="1" step="1"
+                           placeholder="1000">
+                </label>
+            </div>
+            <p class="ayuda">
+                Al entrar a fermentación se asigna un fermentador libre con capacidad
+                suficiente, o puedes elegir uno desde el detalle del lote.
+            </p>
+            <footer class="modal-pie">
+                <button type="button" class="boton fantasma" data-cerrar>Cancelar</button>
+                <button type="submit" class="boton primario">Crear lote</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <dialog id="modal-fermentador" class="modal">
+        <form id="form-fermentador" class="modal-tarjeta">
+            <header class="modal-cabecera">
+                <div>
+                    <p class="eyebrow">Equipo</p>
+                    <h2>Registrar fermentador</h2>
+                </div>
+                <button type="button" class="cerrar" data-cerrar aria-label="Cerrar">×</button>
+            </header>
+            <div class="campos">
+                <label>
+                    <span>Nombre</span>
+                    <input name="nombre" type="text" required maxlength="80"
+                           placeholder="Fermentador G" autocomplete="off">
+                </label>
+                <label>
+                    <span>Capacidad (litros)</span>
+                    <input name="capacidad_litros" type="number" required min="1" step="1"
+                           placeholder="1500">
+                </label>
+                <label>
+                    <span>Temperatura objetivo (°C)</span>
+                    <input name="temperatura_objetivo" type="number" min="-20" max="120"
+                           step="0.1" placeholder="18.0">
+                </label>
+                <label>
+                    <span>Temperatura actual (°C)</span>
+                    <input name="temperatura_actual" type="number" min="-20" max="120"
+                           step="0.1" placeholder="18.0">
+                </label>
+                <label>
+                    <span>Tolerancia (°C)</span>
+                    <input name="tolerancia" type="number" min="0.1" max="30"
+                           step="0.1" placeholder="1.0">
+                </label>
+            </div>
+            <p class="ayuda">
+                Si omites la temperatura actual se usa la objetivo. La tolerancia
+                predeterminada es de 1.0 °C.
+            </p>
+            <footer class="modal-pie">
+                <button type="button" class="boton fantasma" data-cerrar>Cancelar</button>
+                <button type="submit" class="boton primario">Crear fermentador</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <dialog id="modal-detalle" class="modal ancho">
+        <div class="modal-tarjeta">
+            <header class="modal-cabecera">
+                <div id="detalle-titulo"></div>
+                <button type="button" class="cerrar" data-cerrar aria-label="Cerrar">×</button>
+            </header>
+            <div id="detalle-contenido"></div>
+            <footer id="detalle-acciones" class="modal-pie"></footer>
+        </div>
+    </dialog>
+
+    <dialog id="modal-fermentador-accion" class="modal">
+        <form id="form-fermentador-accion" class="modal-tarjeta">
+            <input type="hidden" name="id">
+            <input type="hidden" name="modo">
+            <header class="modal-cabecera">
+                <div>
+                    <p class="eyebrow" id="accion-eyebrow">Temperatura</p>
+                    <h2 id="accion-titulo">Actualizar fermentador</h2>
+                </div>
+                <button type="button" class="cerrar" data-cerrar aria-label="Cerrar">×</button>
+            </header>
+            <div class="campos">
+                <label>
+                    <span id="accion-etiqueta">Temperatura (°C)</span>
+                    <input name="valor" type="number" required min="-20" max="120" step="0.1">
+                </label>
+            </div>
+            <p id="accion-ayuda" class="ayuda"></p>
+            <footer class="modal-pie">
+                <button type="button" class="boton fantasma" data-cerrar>Cancelar</button>
+                <button type="submit" class="boton primario">Guardar</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <div id="toasts" class="toasts" aria-live="assertive" aria-atomic="false"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

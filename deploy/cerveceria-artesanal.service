@@ -1,0 +1,28 @@
+[Unit]
+Description=Cerveceria Artesanal (Erlang/OTP release)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cerveceria
+Group=cerveceria
+WorkingDirectory=/opt/cerveceria-artesanal
+Environment=HOME=/opt/cerveceria-artesanal
+Environment=ERL_CRASH_DUMP=/opt/cerveceria-artesanal/erl_crash.dump
+Environment=LANG=C.UTF-8
+ExecStart=/opt/cerveceria-artesanal/bin/p80_cerveceria_artesanal foreground
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/cerveceria-artesanal
+
+[Install]
+WantedBy=multi-user.target

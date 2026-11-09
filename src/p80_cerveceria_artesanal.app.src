@@ -1,0 +1,19 @@
+{application, p80_cerveceria_artesanal, [
+  {description, "Sistema de administracion de produccion para cerveceria artesanal"},
+  {vsn, "0.1.0"},
+  {registered, [
+    p80_cerveceria_artesanal_sup,
+    p80_registro,
+    p80_eventos,
+    p80_metricas,
+    p80_lote_sup,
+    p80_fermentador_sup,
+    p80_http,
+    p80_vigilante,
+    p80_control_temperatura
+  ]},
+  {mod, {p80_cerveceria_artesanal_app, []}},
+  {applications, [kernel, stdlib, cowboy, jsx, recon]},
+  {env, []},
+  {modules, []}
+]}.
