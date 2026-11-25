@@ -475,7 +475,41 @@ y autenticación del panel.
 
 ---
 
-## 11. Estructura del proyecto
+## 11. Extensión Gemelo Digital (Prolog + Janus)
+
+El proyecto incorpora una extensión declarativa que **no modifica el núcleo
+Erlang/OTP**: un motor Prolog modela el estado operativo y deduce riesgos,
+transiciones permitidas, causas raíz, recomendaciones, auditoría y métricas a
+partir de la API HTTP existente. Python usa `janus-swi` para consultar ese motor.
+
+- Código y documentación: `prolog/`.
+- `puede_avanzar/3`: valida secuencia estricta, capacidad y exclusividad.
+- `motivo/2`: deduce `desviacion_termica`, `caida_control_temperatura` o
+  `estado_lote_riesgo`.
+- `auditoria/1` y `comparar_metricas/1`: detectan inconsistencias y contrastan
+  lo deducido con `/api/metricas`.
+
+Arranque y escenarios:
+
+```bash
+conda create -y -n p80-gemelo -c conda-forge python=3.13 swi-prolog c-compiler pip
+conda run -n p80-gemelo python -m pip install -r prolog/requirements.txt
+conda run -n p80-gemelo python prolog/gemelo_janus.py --mode demo
+conda run -n p80-gemelo python prolog/gemelo_janus.py --mode caos --fermentador 1 --grados 5.0
+conda run -n p80-gemelo python -m unittest discover -s prolog -p 'test_*.py' -v
+```
+
+Con `rebar3 shell` y `p80_demo:escenario()` activos:
+
+```bash
+conda run -n p80-gemelo python prolog/gemelo_janus.py --mode api
+```
+
+Detalles, requisitos y límites: `prolog/README.md`.
+
+---
+
+## 12. Estructura del proyecto
 
 ```
 .
@@ -491,6 +525,12 @@ y autenticación del panel.
 │   ├── index.html
 │   ├── app.js
 │   └── styles.css
+├── prolog/
+│   ├── cerveceria_gemelo.pl
+│   ├── gemelo_janus.py
+│   ├── test_gemelo_janus.py
+│   ├── requirements.txt
+│   └── README.md
 ├── rel/
 │   └── README.md
 ├── src/
@@ -504,7 +544,7 @@ y autenticación del panel.
 
 ---
 
-## 12. Checklist de entrega
+## 13. Checklist de entrega
 
 - [x] Dominio modelado con `gen_statem` y `gen_server`.
 - [x] Supervisión OTP con estrategia y orden justificados.
@@ -518,5 +558,7 @@ y autenticación del panel.
 - [x] Prueba de caos automatizada.
 - [x] `rebar3 compile` y `rebar3 eunit` en verde.
 - [x] Release de producción y unidad systemd de ejemplo.
+- [x] Gemelo Digital en Prolog con puente Python/Janus y escenarios `demo`/`caos`.
+- [x] Pruebas reproducibles del gemelo (`prolog/test_gemelo_janus.py`).
 - [ ] Capturas de Stitch (el diseño se implementó directamente en HTML/CSS; ver
       `design/DESIGN.md`).

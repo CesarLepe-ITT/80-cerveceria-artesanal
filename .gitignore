@@ -6,3 +6,6 @@ rebar3.crashdump
 .rebar3/
 *.log
 logs/
+__pycache__/
+*.pyc
+.venv/
